@@ -1,8 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from datetime import timedelta
+from django.utils import timezone
 
-# 1. User моделі (bio және avatar қосылған)
+# 1. User моделі
 class User(AbstractUser):
     bio = models.TextField(blank=True, null=True)
     avatar_url = models.ImageField(upload_to='avatars/', blank=True, null=True)
@@ -16,11 +18,10 @@ class Post(models.Model):
     caption = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
-# 3. Медиа (Бір постта бірнеше сурет болуы мүмкін)
+# 3. Медиа
 class Media(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='media')
     file = models.FileField(upload_to='post_media/')
-    # Сурет пе әлде видео ма анықтау үшін
     is_video = models.BooleanField(default=False) 
 
 # 4. Комментарийлер
@@ -30,7 +31,7 @@ class Comment(models.Model):
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
-# 5. Лайктар (UniqueConstraint арқылы бір адам бір постқа тек 1 лайк баса алады)
+# 5. Лайктар
 class Like(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -46,8 +47,45 @@ class Follow(models.Model):
     class Meta:
         unique_together = ('follower', 'followee')
 
-# 7. Сақталғандар (Saved Posts)
+# 7. Сақталғандар
 class SavedPost(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='saved_posts')
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    
+
+# --- ЖАҢА ҚОСЫЛҒАН СТОРИЗ БӨЛІМІ ---
+
+# 8. Сториз (24 сағаттық посттар)
+class Story(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='stories')
+    file = models.FileField(upload_to='stories/')
+    is_video = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Story by {self.user.username} at {self.created_at}"
+
+    @property
+    def is_active(self):
+        # 24 сағат өтті ме, жоқ па тексереді
+        return timezone.now() < self.created_at + timedelta(hours=24)
+
+# 9. Сторизге лайк басу
+class StoryLike(models.Model):
+    story = models.ForeignKey(Story, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('story', 'user')
+
+# 10. Сторизге жауап жазу (Reply)
+class StoryReply(models.Model):
+    story = models.ForeignKey(Story, on_delete=models.CASCADE, related_name='replies')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Reply by {self.user.username} to {self.story.id}"
