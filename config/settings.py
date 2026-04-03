@@ -5,13 +5,19 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-6-xzkn(qnwgt!u@=8+!sidpokm0h6e0p*6v8!^c_74y%q1%z=*')
+# 🔐 SECRET KEY
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-6-xzkn(qnwgt!u@=8+!sidpokm0h6e0p*6v8!^c_74y%q1%z=*'
+)
 
-# Render-де DEBUG-ты False қылған дұрыс, бірақ қазірше True тұра берсін
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+# 🚀 DEBUG (для Render лучше False)
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
+# 🌍 ALLOWED HOSTS
 ALLOWED_HOSTS = ['*']
 
+# 📦 INSTALLED APPS
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -19,19 +25,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
-    # СЕРІКТЕС КІТАПХАНАЛАР
+
+    # DRF
     'rest_framework',
     'rest_framework_simplejwt',
-    'whitenoise.runserver_nostatic', # Статика үшін
-    
-    # СЕНІҢ ҚОСЫМШАҢ
-    'config', 
+
+    # WhiteNoise (static files)
+    'whitenoise.runserver_nostatic',
+
+    # YOUR APP
+    'config',
 ]
 
+# ⚙️ MIDDLEWARE
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # ОРНЫ ОСЫ ЖЕРДЕ БОЛУЫ ТИІС
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -59,16 +69,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# DATABASE - Render PostgreSQL-ге автоматты қосылу
+# 🟢 DATABASE (Render PostgreSQL)
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
+    'default': dj_database_url.parse(
+        os.environ.get('DATABASE_URL'),
         conn_max_age=600
     )
 }
 
+# 👤 CUSTOM USER
 AUTH_USER_MODEL = 'config.User'
 
+# 🔐 DRF + JWT
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -85,6 +97,7 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
+# 🔒 PASSWORD VALIDATION
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -92,18 +105,22 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+# 🌐 LANGUAGE / TIME
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# СТАТИКАЛЫҚ ФАЙЛДАР (МАҢЫЗДЫ)
-STATIC_URL = 'static/'
+# 📁 STATIC FILES (ВАЖНО ДЛЯ RENDER)
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# МЕДИА ФАЙЛДАР
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_DIRS = []
+
+# 📁 MEDIA FILES
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# 🔑 DEFAULT AUTO FIELD
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
